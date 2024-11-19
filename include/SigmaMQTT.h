@@ -6,6 +6,7 @@
 #include <AsyncMqttClient.h>
 #include <SigmaLoger.hpp>
 #include <SigmaMQTTPkg.h>
+#include <map>
 
 
 typedef struct{
@@ -24,17 +25,20 @@ public:
 
     static void Subscribe(SigmaMQTTSubscription subscriptionTopic);
     static void Publish(String topic, String payload);
-    static void Unsubscribe(String section, String topic);
+    static void Unsubscribe(String topic);
+    static void Unsubscribe(SigmaMQTTSubscription topic) { Unsubscribe(topic.topic); };
 
     static void SetClientId(String id) { strcpy(ClientId, id.c_str()); };
 
 private:
-    inline static SigmaLoger *MLogger = new SigmaLoger(512);
+    //inline static SigmaLoger *MLogger = new SigmaLoger(512);
     inline static char ClientId[16];
     inline static AsyncMqttClient mqttClient;
     static void onMqttConnect(bool sessionPresent);
     static void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
     static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
+
+    inline static std::map<String, SigmaMQTTSubscription> eventMap;
 };
 
 #endif

@@ -10,6 +10,7 @@ class SigmaMQTTPkg
 public:
     SigmaMQTTPkg(String topic, String payload);
     SigmaMQTTPkg(const char *msg);
+    ~SigmaMQTTPkg();
     String GetTopic(){return topic;};
     String GetPayload(){return payload;};
     char *GetMsg(){return msg;};

@@ -5,8 +5,7 @@
 #include "SigmaMQTTPkg.h"
 
 SigmaMQTT mqtt;
-SigmaLoger *Log = new SigmaLoger(512);
-ESP_EVENT_DECLARE_BASE(MQTT_EVENT);
+ESP_EVENT_DECLARE_BASE(SIGMAMQTT_EVENT);
 
 enum EVENT_IDS
 {
@@ -22,9 +21,9 @@ TimerHandle_t wifiReconnectTimer;
 void mqttEventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
 
-  if (strcmp(MQTT_EVENT, event_base) == 0)
+  if (strcmp(SIGMAMQTT_EVENT, event_base) == 0)
   {
-    SigmaMQTTPkg pkg = SigmaMQTTPkg((char*)event_data);
+    SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
 
     if (event_id == MQTT_EVENT_FIRST)
     {
@@ -98,6 +97,8 @@ void connectToWifi()
 
 void setup()
 {
+  Log = new SigmaLoger(512);
+
   mqtt.Init(IPAddress(192, 168, 0, 98));
   esp_err_t res;
   res = esp_event_loop_create_default();
@@ -124,7 +125,7 @@ void setup()
       {"test/test1", MQTT_EVENT_FIRST},
       {"test/test2", MQTT_EVENT_SECOND},
       {"test/test3", MQTT_EVENT_FIRST},
-      {"test/test1", MQTT_EVENT_THIRD} // duplicate topic - the both events will be sent
+      {"test/test1", MQTT_EVENT_THIRD} // duplicate topic - the new event will overwrite the old one
   };
   for (auto topic : topics)
   {
@@ -134,5 +135,5 @@ void setup()
 
 void loop()
 {
-   vTaskDelete(NULL);
+  vTaskDelete(NULL);
 }
