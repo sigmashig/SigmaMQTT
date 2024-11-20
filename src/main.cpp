@@ -4,7 +4,7 @@
 #include "SigmaLoger.hpp"
 #include "SigmaMQTTPkg.h"
 
-SigmaMQTT mqtt;
+// SigmaMQTT mqtt;
 ESP_EVENT_DECLARE_BASE(SIGMAMQTT_EVENT);
 
 enum EVENT_IDS
@@ -18,50 +18,46 @@ enum EVENT_IDS
 };
 TimerHandle_t wifiReconnectTimer;
 
+void TestMqtt()
+{
+  SigmaMQTT::Publish("test/test1", "Hello world!");
+  SigmaMQTT::Publish("test/test999", "Just for publish! ");
+  SigmaMQTT::Unsubscribe("test/test1");
+  SigmaMQTTSubscription pkg;
+
+  pkg.topic = "test/test1";
+  pkg.eventId = MQTT_EVENT_FIRST;
+  SigmaMQTT::Subscribe(pkg);
+  SigmaMQTT::Publish("test/test1", "Hello world2!");
+  pkg.topic = "test/test2";
+  pkg.eventId = MQTT_EVENT_THIRD;
+  SigmaMQTT::Subscribe(pkg);
+}
+
 void mqttEventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
-
   if (strcmp(SIGMAMQTT_EVENT, event_base) == 0)
   {
-    SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
 
-    if (event_id == MQTT_EVENT_FIRST)
+    if (event_id == SIGMAMQTT_CONNECTED)
     {
-      if (pkg.GetTopic() == "test/test1")
-      {
-        Log->Internal("MQTT_EVENT_FIRST: test/test1");
-      }
-      else if (pkg.GetTopic() == "test/test3")
-      {
-        Log->Internal("MQTT_EVENT_FIRST: test/test3");
-      }
-      else
-      {
-        Log->Internal("MQTT_EVENT_FIRST: unknown topic");
-      }
       Log->Internal("MQTT connected");
+      TestMqtt();
+    }
+    else if (event_id == MQTT_EVENT_FIRST)
+    {
+      SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
+      Log->Append("MQTT_EVENT_FIRST:[").Append(pkg.GetTopic()).Append("]:").Append(pkg.GetPayload()).Internal();
     }
     else if (event_id == MQTT_EVENT_SECOND)
     {
-      if (pkg.GetTopic() == "test/test2")
-      {
-        Log->Internal("MQTT_EVENT_SECOND: test/test2");
-      }
-      else
-      {
-        Log->Internal("MQTT_EVENT_SECOND: unknown topic");
-      }
+      SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
+      Log->Append("MQTT_EVENT_SECOND:[").Append(pkg.GetTopic()).Append("]:").Append(pkg.GetPayload()).Internal();
     }
     else if (event_id == MQTT_EVENT_THIRD)
     {
-      if (pkg.GetTopic() == "test/test1")
-      {
-        Log->Internal("MQTT_EVENT_THIRD: test/test1");
-      }
-      else
-      {
-        Log->Internal("MQTT_EVENT_THIRD: unknown topic");
-      }
+      SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
+      Log->Append("MQTT_EVENT_THIRD:[").Append(pkg.GetTopic()).Append("]:").Append(pkg.GetPayload()).Internal();
     }
     else
     {
@@ -76,8 +72,8 @@ void wiFiEvent(WiFiEvent_t event)
   {
   case SYSTEM_EVENT_STA_GOT_IP:
     Log->Internal("WiFi connected");
-    Log->Append("IP address: ").Append(WiFi.localIP().toString().c_str());
-    mqtt.ConnectToMqtt();
+    Log->Append("IP address: ").Append(WiFi.localIP().toString().c_str()).Internal();
+    SigmaMQTT::ConnectToMqtt();
     break;
   case SYSTEM_EVENT_STA_DISCONNECTED:
     Log->Internal("WiFi lost connection");
@@ -97,9 +93,12 @@ void connectToWifi()
 
 void setup()
 {
-  Log = new SigmaLoger(512);
+  Serial.begin(115200);
+  Serial.println("------------------");
 
-  mqtt.Init(IPAddress(192, 168, 0, 98));
+  Log = new SigmaLoger(512);
+  Log->Append("Starting...").Internal();
+  SigmaMQTT::Init(IPAddress(192, 168, 0, 98));
   esp_err_t res;
   res = esp_event_loop_create_default();
   if (res != ESP_OK && res != ESP_ERR_INVALID_STATE)
@@ -124,12 +123,15 @@ void setup()
   SigmaMQTTSubscription topics[] = {
       {"test/test1", MQTT_EVENT_FIRST},
       {"test/test2", MQTT_EVENT_SECOND},
-      {"test/test3", MQTT_EVENT_FIRST},
-      {"test/test1", MQTT_EVENT_THIRD} // duplicate topic - the new event will overwrite the old one
+      {"test/test3", MQTT_EVENT_THIRD},
+      {"test/test4", MQTT_EVENT_FOURTH} // duplicate topic - the new event will overwrite the old one
   };
+  // It is possible to subscribe the topics before the connection is established (when isReSubscribe = true)
+  //  the topics will be subscribed after the connection is established
   for (auto topic : topics)
   {
-    mqtt.Subscribe(topic);
+    Log->Append("Subscribing to: ").Append(topic.topic).Internal();
+    SigmaMQTT::Subscribe(topic);
   }
 }
 

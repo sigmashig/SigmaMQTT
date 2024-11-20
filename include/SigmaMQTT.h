@@ -15,6 +15,13 @@ typedef struct{
     bool isReSubscribe = true;
 } SigmaMQTTSubscription;
 
+
+enum
+{
+    SIGMAMQTT_CONNECTED = 0xF1000,
+    SIGMAMQTT_DISCONNECTED
+} EVENT_IDS;
+
 class SigmaMQTT
 {
 public:

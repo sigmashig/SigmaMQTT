@@ -32,14 +32,18 @@ void SigmaMQTT::Init(IPAddress ip, String url, uint16_t port, String user, Strin
 
 void SigmaMQTT::ConnectToMqtt()
 {
-    Log->Internal("Connecting to MQTT...");
-    mqttClient.connect();
+    //MLogger->Internal("Connecting to MQTT...");
+    mqttClient.connect();   
 }
 
 void SigmaMQTT::Subscribe(SigmaMQTTSubscription subscriptionTopic)
 {
-    mqttClient.subscribe(subscriptionTopic.topic.c_str(), 0);
     eventMap[subscriptionTopic.topic] = subscriptionTopic;
+    if (mqttClient.connected())
+    {
+        //MLogger->Append("Send Subscribe for ").Append(subscriptionTopic.topic).Internal();
+        mqttClient.subscribe(subscriptionTopic.topic.c_str(), 0);
+    }
 }
 
 void SigmaMQTT::Publish(String topic, String payload)
@@ -56,14 +60,17 @@ void SigmaMQTT::Unsubscribe(String topic)
 void SigmaMQTT::onMqttConnect(bool sessionPresent)
 {
     //MLogger->Internal("Connected to MQTT");
+    //MLogger->Internal("Auto Subscribing...");
     for (auto const &x : eventMap)
     {
         if (x.second.isReSubscribe)
         {
-            mqttClient.subscribe(x.first.c_str(), 0);
             //MLogger->Append("Subscribing to ").Append(x.first).Internal();
+            mqttClient.subscribe(x.first.c_str(), 0);
         }
     }
+    //MLogger->Internal("Subscribed");
+    esp_err_t res = esp_event_post(SIGMAMQTT_EVENT, SIGMAMQTT_CONNECTED, (void*)"", 1, portMAX_DELAY);
 }
 
 void SigmaMQTT::onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
@@ -87,6 +94,7 @@ void SigmaMQTT::onMqttMessage(char *topic, char *payload, AsyncMqttClientMessage
 void SigmaMQTT::onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
     //MLogger->Internal("Disconnected from MQTT");
+    esp_err_t res = esp_event_post(SIGMAMQTT_EVENT, SIGMAMQTT_DISCONNECTED, NULL, 0, portMAX_DELAY);
     if (WiFi.isConnected())
     {
         xTimerStart(mqttReconnectTimer, 0);
