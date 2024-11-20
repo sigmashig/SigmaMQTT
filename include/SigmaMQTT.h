@@ -8,18 +8,18 @@
 #include <SigmaMQTTPkg.h>
 #include <map>
 
-
-typedef struct{
+typedef struct
+{
     String topic;
-    int32_t eventId;
+    int32_t eventId = 0;
     bool isReSubscribe = true;
 } SigmaMQTTSubscription;
-
 
 enum
 {
     SIGMAMQTT_CONNECTED = 0xF1000,
-    SIGMAMQTT_DISCONNECTED
+    SIGMAMQTT_DISCONNECTED,
+    SIGMAMQTT_MESSAGE
 } EVENT_IDS;
 
 class SigmaMQTT
@@ -31,6 +31,12 @@ public:
     inline static TimerHandle_t mqttReconnectTimer;
 
     static void Subscribe(SigmaMQTTSubscription subscriptionTopic);
+    static void Subscribe(String topic)
+    {
+        SigmaMQTTSubscription pkg;
+        pkg.topic = topic;
+        Subscribe(pkg);
+    };
     static void Publish(String topic, String payload);
     static void Unsubscribe(String topic);
     static void Unsubscribe(SigmaMQTTSubscription topic) { Unsubscribe(topic.topic); };
@@ -38,7 +44,7 @@ public:
     static void SetClientId(String id) { strcpy(ClientId, id.c_str()); };
 
 private:
-    //inline static SigmaLoger *MLogger = new SigmaLoger(512);
+    // inline static SigmaLoger *MLogger = new SigmaLoger(512);
     inline static char ClientId[16];
     inline static AsyncMqttClient mqttClient;
     static void onMqttConnect(bool sessionPresent);
