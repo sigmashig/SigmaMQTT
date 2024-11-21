@@ -36,8 +36,12 @@ void SigmaMQTT::ConnectToMqtt()
     mqttClient.connect();
 }
 
-void SigmaMQTT::Subscribe(SigmaMQTTSubscription subscriptionTopic)
+void SigmaMQTT::Subscribe(SigmaMQTTSubscription subscriptionTopic, String rootTopic)
 {
+    if (rootTopic != "")
+    {
+        subscriptionTopic.topic = rootTopic + subscriptionTopic.topic;
+    }
     eventMap[subscriptionTopic.topic] = subscriptionTopic;
     if (mqttClient.connected())
     {
@@ -51,12 +55,16 @@ void SigmaMQTT::Publish(String topic, String payload)
     mqttClient.publish(topic.c_str(), 0, false, payload.c_str());
 }
 
-void SigmaMQTT::Unsubscribe(String topic)
+void SigmaMQTT::Unsubscribe(String topic, String rootTopic)
 {
+    if (rootTopic != "")
+    {
+        topic = rootTopic + topic;
+    }
+    // MLogger->Append("Unsubscribing from ").Append(topic).Internal();
     mqttClient.unsubscribe(topic.c_str());
     eventMap.erase(topic);
 }
-
 void SigmaMQTT::onMqttConnect(bool sessionPresent)
 {
     // MLogger->Internal("Connected to MQTT");

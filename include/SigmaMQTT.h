@@ -30,7 +30,7 @@ public:
 
     inline static TimerHandle_t mqttReconnectTimer;
 
-    static void Subscribe(SigmaMQTTSubscription subscriptionTopic);
+    static void Subscribe(SigmaMQTTSubscription subscriptionTopic, String rootTopic = "");
     static void Subscribe(String topic)
     {
         SigmaMQTTSubscription pkg;
@@ -38,8 +38,8 @@ public:
         Subscribe(pkg);
     };
     static void Publish(String topic, String payload);
-    static void Unsubscribe(String topic);
-    static void Unsubscribe(SigmaMQTTSubscription topic) { Unsubscribe(topic.topic); };
+    static void Unsubscribe(String topic, String rootTopic = "");
+    static void Unsubscribe(SigmaMQTTSubscription topic, String rootTopic = "") { Unsubscribe(topic.topic, rootTopic); };
 
     static void SetClientId(String id) { strcpy(ClientId, id.c_str()); };
 
