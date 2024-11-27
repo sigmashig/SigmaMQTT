@@ -4,6 +4,11 @@
 #include "SigmaLoger.hpp"
 #include "SigmaMQTTPkg.h"
 
+
+#define MYWIFI_SSID "MyWiFi"
+#define MYWIFI_PASS "MyWiFiPass"
+#define MYMQTT_IP "192.168.0.98"
+
 // SigmaMQTT mqtt;
 ESP_EVENT_DECLARE_BASE(SIGMAMQTT_EVENT);
 
@@ -58,7 +63,27 @@ void mqttEventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, 
     {
       SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
       Log->Append("MQTT_EVENT_THIRD:[").Append(pkg.GetTopic()).Append("]:").Append(pkg.GetPayload()).Internal();
+    } // duplicate topic - the new event will overwrite the old one
+    else if (event_id == MQTT_EVENT_FOURTH)
+    {
+      SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
+      Log->Append("MQTT_EVENT_FOURTH:[").Append(pkg.GetTopic()).Append("]:").Append(pkg.GetPayload()).Internal();
     }
+    else if (event_id == MQTT_EVENT_FIFTH)
+    {
+      SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
+      Log->Append("MQTT_EVENT_FIFTH:[").Append(pkg.GetTopic()).Append("]:").Append(pkg.GetPayload().substring(0,400)).Internal();
+    }
+    else if (event_id == SIGMAMQTT_DISCONNECTED)
+    {
+      Log->Internal("MQTT disconnected");
+    }
+    else if (event_id == SIGMAMQTT_MESSAGE)
+    {
+      SigmaMQTTPkg pkg = SigmaMQTTPkg((char *)event_data);
+      Log->Append("SIGMAMQTT_MESSAGE:[").Append(pkg.GetTopic()).Append("]:").Append(pkg.GetPayload()).Internal();
+    }
+
     else
     {
       Log->Internal("Unknown event");
@@ -88,7 +113,7 @@ void connectToWifi()
 
   WiFi.onEvent(wiFiEvent);
 
-  WiFi.begin("Sigma", "kybwynyd");
+  WiFi.begin(MYWIFI_SSID, MYWIFI_PASS);
 }
 
 void setup()
@@ -98,7 +123,7 @@ void setup()
 
   Log = new SigmaLoger(512);
   Log->Append("Starting...").Internal();
-  SigmaMQTT::Init(IPAddress(192, 168, 0, 98));
+  SigmaMQTT::Init(IPAddress((const uint8_t*)(MYMQTT_IP)));
   esp_err_t res;
   res = esp_event_loop_create_default();
   if (res != ESP_OK && res != ESP_ERR_INVALID_STATE)
@@ -133,6 +158,9 @@ void setup()
     Log->Append("Subscribing to: ").Append(topic.topic).Internal();
     SigmaMQTT::Subscribe(topic);
   }
+  // Topic with long-Long message
+  SigmaMQTTSubscription longTopic = {"Config/MBCollector/MB_09/Equipment", MQTT_EVENT_FIFTH};
+  SigmaMQTT::Subscribe(longTopic);
 }
 
 void loop()

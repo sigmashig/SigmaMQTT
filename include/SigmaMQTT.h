@@ -44,7 +44,7 @@ public:
     static void SetClientId(String id) { strcpy(ClientId, id.c_str()); };
 
 private:
-    // inline static SigmaLoger *MLogger = new SigmaLoger(512);
+    //inline static SigmaLoger *MLogger = new SigmaLoger(512);
     inline static char ClientId[16];
     inline static AsyncMqttClient mqttClient;
     static void onMqttConnect(bool sessionPresent);
@@ -52,6 +52,7 @@ private:
     static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 
     inline static std::map<String, SigmaMQTTSubscription> eventMap;
+    inline static std::map<String, String> topicMsg;
 };
 
 #endif

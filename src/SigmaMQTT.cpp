@@ -27,6 +27,7 @@ void SigmaMQTT::Init(IPAddress ip, String url, uint16_t port, String user, Strin
     strncpy(ClientId, (String("Sigma_") + String(random(1000))).c_str(), sizeof(ClientId));
     mqttClient.setClientId(ClientId);
     mqttClient.setCredentials(user.c_str(), pwd.c_str());
+    // MLogger->Internal("MAP CLEAR");
     eventMap.clear();
 }
 
@@ -42,12 +43,14 @@ void SigmaMQTT::Subscribe(SigmaMQTTSubscription subscriptionTopic, String rootTo
     {
         subscriptionTopic.topic = rootTopic + subscriptionTopic.topic;
     }
+//    MLogger->Append("Add to map: ").Append(subscriptionTopic.topic).Internal();
     eventMap[subscriptionTopic.topic] = subscriptionTopic;
     if (mqttClient.connected())
     {
-        // MLogger->Append("Send Subscribe for ").Append(subscriptionTopic.topic).Internal();
+  //      MLogger->Append("Send Subscribe for ").Append(subscriptionTopic.topic).Internal();
         mqttClient.subscribe(subscriptionTopic.topic.c_str(), 0);
     }
+    // MLogger->Append("Map size(2): ").Append(eventMap.size()).Internal();
 }
 
 void SigmaMQTT::Publish(String topic, String payload)
@@ -64,16 +67,19 @@ void SigmaMQTT::Unsubscribe(String topic, String rootTopic)
     // MLogger->Append("Unsubscribing from ").Append(topic).Internal();
     mqttClient.unsubscribe(topic.c_str());
     eventMap.erase(topic);
+    // MLogger->Append("Map size(3): ").Append(eventMap.size()).Internal();
 }
 void SigmaMQTT::onMqttConnect(bool sessionPresent)
 {
     // MLogger->Internal("Connected to MQTT");
     // MLogger->Internal("Auto Subscribing...");
+    // MLogger->Append("Map size(1): ").Append(eventMap.size()).Internal();
     for (auto const &x : eventMap)
     {
+       // MLogger->Append("Subscribing to ").Append(x.first).Internal();
         if (x.second.isReSubscribe)
         {
-            // MLogger->Append("Subscribing to ").Append(x.first).Internal();
+         //   MLogger->Append("Subscribing to ").Append(x.first).Internal();
             mqttClient.subscribe(x.first.c_str(), 0);
         }
     }
@@ -85,18 +91,38 @@ void SigmaMQTT::onMqttMessage(char *topic, char *payload, AsyncMqttClientMessage
 {
     bool isReady = true;
     String sPayload = (len == 0 ? "" : String(payload, len));
-    // MLogger->Append("{").Append(len).Append(":").Append(index).Append(":").Append(total).Append("}[").Append(topic).Append("]:").Append(sPayload.substring(0, 100)).Internal();
+    //MLogger->Append("{").Append(len).Append(":").Append(index).Append(":").Append(total).Append("}[").Append(topic).Append("]:").Append(sPayload.substring(0, 100)).Internal();
 
     String sTopic = String(topic);
-    for (auto const &x : eventMap)
-    {
-        if (sTopic == x.first)
+
+    if (len != total)
+    { // fragmented message
+
+        topicMsg[sTopic] += sPayload;
+        if (index + len == total)
         {
-            SigmaMQTTPkg pkg(sTopic, sPayload);
-            int32_t e = (x.second.eventId == 0 ? SIGMAMQTT_MESSAGE : x.second.eventId);
-            esp_err_t res = esp_event_post(SIGMAMQTT_EVENT, e, pkg.GetMsg(), strlen(pkg.GetMsg()) + 1, portMAX_DELAY);
-            return;
+            sPayload = topicMsg[sTopic];
+            topicMsg.erase(sTopic);
+            isReady = true;
         }
+        else
+        {
+            isReady = false;
+        }
+    }
+    if (isReady)
+    {
+        SigmaMQTTPkg pkg(sTopic, sPayload);
+        for (auto const &x : eventMap)
+        {
+            if (sTopic == x.first)
+            {
+                int32_t e = (x.second.eventId == 0 ? SIGMAMQTT_MESSAGE : x.second.eventId);
+                esp_err_t res = esp_event_post(SIGMAMQTT_EVENT, e, pkg.GetMsg(), strlen(pkg.GetMsg()) + 1, portMAX_DELAY);
+                return;
+            }
+        }
+        esp_event_post(SIGMAMQTT_EVENT, SIGMAMQTT_MESSAGE, (void *)(pkg.GetMsg()), len, portMAX_DELAY);
     }
 }
 
