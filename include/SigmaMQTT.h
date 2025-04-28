@@ -25,7 +25,8 @@ enum
 class SigmaMQTT
 {
 public:
-    static void Init(IPAddress ip, String url = "", uint16_t port = 1883, String user = "", String pwd = "");
+    [[deprecated("Use a single parameter url instead")]] static void Init(IPAddress ip, String url = "", uint16_t port = 1883, String user = "", String pwd = "");
+    static void Init(String url, uint16_t port = 1883, String user = "", String pwd = "", String clientId = "");
     static void ConnectToMqtt();
 
     inline static TimerHandle_t mqttReconnectTimer;
@@ -41,11 +42,11 @@ public:
     static void Unsubscribe(String topic, String rootTopic = "");
     static void Unsubscribe(SigmaMQTTSubscription topic, String rootTopic = "") { Unsubscribe(topic.topic, rootTopic); };
 
-    static void SetClientId(String id) { strcpy(ClientId, id.c_str()); };
+    static void SetClientId(String id) { clientId= id; };
 
 private:
     //inline static SigmaLoger *MLogger = new SigmaLoger(512);
-    inline static char ClientId[16];
+    inline static String clientId;
     inline static AsyncMqttClient mqttClient;
     static void onMqttConnect(bool sessionPresent);
     static void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);

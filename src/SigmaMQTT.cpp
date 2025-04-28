@@ -4,7 +4,20 @@
 
 ESP_EVENT_DEFINE_BASE(SIGMAMQTT_EVENT);
 
+//[[deprecated("Use a single parameter url instead")]]
 void SigmaMQTT::Init(IPAddress ip, String url, uint16_t port, String user, String pwd)
+{
+    if (ip[0] != 0)
+    {
+        Init(ip.toString(), port, user, pwd);
+    }
+    else
+    {
+        Init(url, port, user, pwd);
+    }
+}
+
+void SigmaMQTT::Init(String url, uint16_t port, String user, String pwd, String _clientId)
 {
     mqttClient.onConnect(onMqttConnect);
     mqttClient.onDisconnect(onMqttDisconnect);
@@ -15,17 +28,39 @@ void SigmaMQTT::Init(IPAddress ip, String url, uint16_t port, String user, Strin
 
     mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(ConnectToMqtt));
 
-    if (ip[0] != 0)
+    bool isIp = true;
+    for (int i = 0; i < url.length(); i++)
     {
+        if (url[i] == '.' || (url[i] >= '0' && url[i] <= '9'))
+        {
+            continue;
+        }
+        else
+        {
+            isIp = false;
+            break;
+        }
+    }
+
+    if (isIp)
+    {
+        IPAddress ip;
+        ip.fromString(url);
+        // MLogger->Append("IP: ").Append(ip.toString()).Internal();
         mqttClient.setServer(ip, port);
     }
     else
     {
+        // MLogger->Append("URL: ").Append(url).Internal();
         mqttClient.setServer(url.c_str(), port);
     }
-
-    strncpy(ClientId, (String("Sigma_") + String(random(1000))).c_str(), sizeof(ClientId));
-    mqttClient.setClientId(ClientId);
+    if (_clientId == "") {
+        clientId = (String("Sigma_") + String(random(1000))).c_str();
+    } else {
+        clientId = _clientId;
+    }
+    // MLogger->Append("ClientId: ").Append(ClientId).Internal();
+    mqttClient.setClientId(clientId.c_str());
     mqttClient.setCredentials(user.c_str(), pwd.c_str());
     // MLogger->Internal("MAP CLEAR");
     eventMap.clear();
@@ -33,7 +68,7 @@ void SigmaMQTT::Init(IPAddress ip, String url, uint16_t port, String user, Strin
 
 void SigmaMQTT::ConnectToMqtt()
 {
-    // MLogger->Internal("Connecting to MQTT...");
+    //MLogger->Internal("Connecting to MQTT...");
     mqttClient.connect();
 }
 
@@ -43,11 +78,11 @@ void SigmaMQTT::Subscribe(SigmaMQTTSubscription subscriptionTopic, String rootTo
     {
         subscriptionTopic.topic = rootTopic + subscriptionTopic.topic;
     }
-//    MLogger->Append("Add to map: ").Append(subscriptionTopic.topic).Internal();
+    //    MLogger->Append("Add to map: ").Append(subscriptionTopic.topic).Internal();
     eventMap[subscriptionTopic.topic] = subscriptionTopic;
     if (mqttClient.connected())
     {
-  //      MLogger->Append("Send Subscribe for ").Append(subscriptionTopic.topic).Internal();
+        //      MLogger->Append("Send Subscribe for ").Append(subscriptionTopic.topic).Internal();
         mqttClient.subscribe(subscriptionTopic.topic.c_str(), 0);
     }
     // MLogger->Append("Map size(2): ").Append(eventMap.size()).Internal();
@@ -76,10 +111,10 @@ void SigmaMQTT::onMqttConnect(bool sessionPresent)
     // MLogger->Append("Map size(1): ").Append(eventMap.size()).Internal();
     for (auto const &x : eventMap)
     {
-       // MLogger->Append("Subscribing to ").Append(x.first).Internal();
+        // MLogger->Append("Subscribing to ").Append(x.first).Internal();
         if (x.second.isReSubscribe)
         {
-         //   MLogger->Append("Subscribing to ").Append(x.first).Internal();
+            //   MLogger->Append("Subscribing to ").Append(x.first).Internal();
             mqttClient.subscribe(x.first.c_str(), 0);
         }
     }
@@ -91,7 +126,7 @@ void SigmaMQTT::onMqttMessage(char *topic, char *payload, AsyncMqttClientMessage
 {
     bool isReady = true;
     String sPayload = (len == 0 ? "" : String(payload, len));
-    //MLogger->Append("{").Append(len).Append(":").Append(index).Append(":").Append(total).Append("}[").Append(topic).Append("]:").Append(sPayload.substring(0, 100)).Internal();
+    // MLogger->Append("{").Append(len).Append(":").Append(index).Append(":").Append(total).Append("}[").Append(topic).Append("]:").Append(sPayload.substring(0, 100)).Internal();
 
     String sTopic = String(topic);
 
@@ -128,7 +163,7 @@ void SigmaMQTT::onMqttMessage(char *topic, char *payload, AsyncMqttClientMessage
 
 void SigmaMQTT::onMqttDisconnect(AsyncMqttClientDisconnectReason reason)
 {
-    // MLogger->Internal("Disconnected from MQTT");
+    //MLogger->Internal("Disconnected from MQTT");
     esp_err_t res = esp_event_post(SIGMAMQTT_EVENT, SIGMAMQTT_DISCONNECTED, NULL, 0, portMAX_DELAY);
     if (WiFi.isConnected())
     {

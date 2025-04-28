@@ -5,9 +5,9 @@
 #include "SigmaMQTTPkg.h"
 
 
-#define MYWIFI_SSID "MyWiFi"
-#define MYWIFI_PASS "MyWiFiPass"
-#define MYMQTT_IP "192.168.0.98"
+#define MYWIFI_SSID "Sigma"
+#define MYWIFI_PASS "kybwynyd"
+#define MYMQTT_IP "192.168.0.102"
 
 // SigmaMQTT mqtt;
 ESP_EVENT_DECLARE_BASE(SIGMAMQTT_EVENT);
@@ -93,6 +93,7 @@ void mqttEventHandler(void *arg, esp_event_base_t event_base, int32_t event_id, 
 
 void wiFiEvent(WiFiEvent_t event)
 {
+  Log->Append("WiFi event:" + String(event)).Internal();
   switch (event)
   {
   case SYSTEM_EVENT_STA_GOT_IP:
@@ -123,7 +124,8 @@ void setup()
 
   Log = new SigmaLoger(512);
   Log->Append("Starting...").Internal();
-  SigmaMQTT::Init(IPAddress((const uint8_t*)(MYMQTT_IP)));
+  Log->Append("IP: ").Append(MYMQTT_IP).Internal();
+  SigmaMQTT::Init(MYMQTT_IP);
   esp_err_t res;
   res = esp_event_loop_create_default();
   if (res != ESP_OK && res != ESP_ERR_INVALID_STATE)
