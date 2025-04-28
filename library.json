@@ -1,6 +1,6 @@
 {
     "name": "SigmaMQTT",
-    "version": "0.1.4",
+    "version": "0.1.5",
     "description": "This package is wrapper for AsyncMQTT. The new features: using esp events for notification about new message",
     "keywords": "MQTT",
     "repository": {
@@ -17,7 +17,7 @@
     "license": "MIT",
     "dependencies": {
         "marvinroger/AsyncMqttClient": "^0.9.0",
-        "sigmashig/SigmaUtils": "^0.1.2"
+        "sigmashig/SigmaLogger": "^0.1.0"
     },
     "homepage": "https://github.com/sigmashig/SigmaMQTT",
     "frameworks": "arduino",
