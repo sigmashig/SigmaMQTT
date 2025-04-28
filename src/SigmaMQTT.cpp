@@ -104,6 +104,17 @@ void SigmaMQTT::Unsubscribe(String topic, String rootTopic)
     eventMap.erase(topic);
     // MLogger->Append("Map size(3): ").Append(eventMap.size()).Internal();
 }
+void SigmaMQTT::Disconnect()
+{
+    if (mqttReconnectTimer != NULL) {
+        xTimerStop(mqttReconnectTimer, 0);
+    }
+    mqttClient.disconnect();
+}
+bool SigmaMQTT::IsConnected()
+{
+    return mqttClient.connected();
+}
 void SigmaMQTT::onMqttConnect(bool sessionPresent)
 {
     // MLogger->Internal("Connected to MQTT");

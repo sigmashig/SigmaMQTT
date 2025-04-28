@@ -43,6 +43,8 @@ public:
     static void Unsubscribe(SigmaMQTTSubscription topic, String rootTopic = "") { Unsubscribe(topic.topic, rootTopic); };
 
     static void SetClientId(String id) { clientId= id; };
+    static void Disconnect();
+    static bool IsConnected();
 
 private:
     //inline static SigmaLoger *MLogger = new SigmaLoger(512);
