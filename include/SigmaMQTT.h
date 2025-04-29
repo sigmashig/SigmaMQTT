@@ -7,7 +7,7 @@
 #include <SigmaLoger.h>
 #include <SigmaMQTTPkg.h>
 #include <map>
-
+#include <esp_event.h>
 typedef struct
 {
     String topic;
@@ -21,6 +21,8 @@ enum
     SIGMAMQTT_DISCONNECTED,
     SIGMAMQTT_MESSAGE
 } EVENT_IDS;
+
+ESP_EVENT_DECLARE_BASE(SIGMAMQTT_EVENT);
 
 class SigmaMQTT
 {

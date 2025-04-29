@@ -120,6 +120,7 @@ void SigmaMQTT::onMqttConnect(bool sessionPresent)
     // MLogger->Internal("Connected to MQTT");
     // MLogger->Internal("Auto Subscribing...");
     // MLogger->Append("Map size(1): ").Append(eventMap.size()).Internal();
+    esp_err_t res = esp_event_post(SIGMAMQTT_EVENT, SIGMAMQTT_CONNECTED, (void *)"", 1, portMAX_DELAY);
     for (auto const &x : eventMap)
     {
         // MLogger->Append("Subscribing to ").Append(x.first).Internal();
@@ -130,7 +131,6 @@ void SigmaMQTT::onMqttConnect(bool sessionPresent)
         }
     }
     // MLogger->Internal("Subscribed");
-    esp_err_t res = esp_event_post(SIGMAMQTT_EVENT, SIGMAMQTT_CONNECTED, (void *)"", 1, portMAX_DELAY);
 }
 
 void SigmaMQTT::onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)

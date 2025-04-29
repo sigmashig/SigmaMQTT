@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "SigmaMQTT.h"
 #include "WiFi.h"
-#include "SigmaLoger.hpp"
+#include "SigmaLoger.h"
 #include "SigmaMQTTPkg.h"
 
 
@@ -141,7 +141,7 @@ void setup()
                                             NULL);
   if (res != ESP_OK)
   {
-    Log->Printf(F("Failed to register event handler: %d"), res).Internal();
+    Log->Printf("Failed to register event handler: %d", res).Internal();
   }
 
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
