@@ -8,19 +8,8 @@
 #include <SigmaMQTTPkg.h>
 #include <map>
 #include <esp_event.h>
-typedef struct
-{
-    String topic;
-    int32_t eventId = 0;
-    bool isReSubscribe = true;
-} SigmaMQTTSubscription;
+#include "ProtocolCommon.h"
 
-enum
-{
-    SIGMAMQTT_CONNECTED = 0xF1000,
-    SIGMAMQTT_DISCONNECTED,
-    SIGMAMQTT_MESSAGE
-} EVENT_IDS;
 
 ESP_EVENT_DECLARE_BASE(SIGMAMQTT_EVENT);
 
@@ -33,16 +22,16 @@ public:
 
     inline static TimerHandle_t mqttReconnectTimer;
 
-    static void Subscribe(SigmaMQTTSubscription subscriptionTopic, String rootTopic = "");
+    static void Subscribe(ProtocolSubscription subscriptionTopic, String rootTopic = "");
     static void Subscribe(String topic)
     {
-        SigmaMQTTSubscription pkg;
+        ProtocolSubscription pkg;
         pkg.topic = topic;
         Subscribe(pkg);
     };
     static void Publish(String topic, String payload);
     static void Unsubscribe(String topic, String rootTopic = "");
-    static void Unsubscribe(SigmaMQTTSubscription topic, String rootTopic = "") { Unsubscribe(topic.topic, rootTopic); };
+    static void Unsubscribe(ProtocolSubscription topic, String rootTopic = "") { Unsubscribe(topic.topic, rootTopic); };
 
     static void SetClientId(String id) { clientId= id; };
     static void Disconnect();
@@ -56,7 +45,7 @@ private:
     static void onMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total);
     static void onMqttDisconnect(AsyncMqttClientDisconnectReason reason);
 
-    inline static std::map<String, SigmaMQTTSubscription> eventMap;
+    inline static std::map<String, ProtocolSubscription> eventMap;
     inline static std::map<String, String> topicMsg;
 };
 

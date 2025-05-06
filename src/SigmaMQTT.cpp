@@ -27,7 +27,6 @@ void SigmaMQTT::Init(String url, uint16_t port, String user, String pwd, String 
     // mqttClient.onPublish(onMqttPublish);
 
     mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(ConnectToMqtt));
-
     bool isIp = true;
     for (int i = 0; i < url.length(); i++)
     {
@@ -46,7 +45,7 @@ void SigmaMQTT::Init(String url, uint16_t port, String user, String pwd, String 
     {
         IPAddress ip;
         ip.fromString(url);
-        // MLogger->Append("IP: ").Append(ip.toString()).Internal();
+        //MLogger->Append("IP: ").Append(ip.toString()).Internal();
         mqttClient.setServer(ip, port);
     }
     else
@@ -72,7 +71,7 @@ void SigmaMQTT::ConnectToMqtt()
     mqttClient.connect();
 }
 
-void SigmaMQTT::Subscribe(SigmaMQTTSubscription subscriptionTopic, String rootTopic)
+void SigmaMQTT::Subscribe(ProtocolSubscription subscriptionTopic, String rootTopic)
 {
     if (rootTopic != "")
     {
