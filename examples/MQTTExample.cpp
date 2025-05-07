@@ -28,7 +28,7 @@ void TestMqtt()
   SigmaMQTT::Publish("test/test1", "Hello world!");
   SigmaMQTT::Publish("test/test999", "Just for publish! ");
   SigmaMQTT::Unsubscribe("test/test1");
-  SigmaMQTTSubscription pkg;
+  ProtocolSubscription pkg;
 
   pkg.topic = "test/test1";
   pkg.eventId = MQTT_EVENT_FIRST;
@@ -147,7 +147,7 @@ void setup()
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void *)0, reinterpret_cast<TimerCallbackFunction_t>(connectToWifi));
   connectToWifi();
 
-  SigmaMQTTSubscription topics[] = {
+  ProtocolSubscription topics[] = {
       {"test/test1", MQTT_EVENT_FIRST},
       {"test/test2", MQTT_EVENT_SECOND},
       {"test/test3", MQTT_EVENT_THIRD},
@@ -161,7 +161,7 @@ void setup()
     SigmaMQTT::Subscribe(topic);
   }
   // Topic with long-Long message
-  SigmaMQTTSubscription longTopic = {"Config/MBCollector/MB_09/Equipment", MQTT_EVENT_FIFTH};
+  ProtocolSubscription longTopic = {"Config/MBCollector/MB_09/Equipment", MQTT_EVENT_FIFTH};
   SigmaMQTT::Subscribe(longTopic);
 }
 

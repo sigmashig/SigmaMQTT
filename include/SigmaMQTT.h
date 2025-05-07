@@ -10,6 +10,16 @@
 #include <esp_event.h>
 #include "ProtocolCommon.h"
 
+struct MqttConfig {
+    bool enabled;
+    String server;
+    uint16_t port;
+    String topic;
+    String username;
+    String password;
+    String clientId;
+};
+
 
 ESP_EVENT_DECLARE_BASE(SIGMAMQTT_EVENT);
 
@@ -18,6 +28,9 @@ class SigmaMQTT
 public:
     [[deprecated("Use a single parameter url instead")]] static void Init(IPAddress ip, String url = "", uint16_t port = 1883, String user = "", String pwd = "");
     static void Init(String url, uint16_t port = 1883, String user = "", String pwd = "", String clientId = "");
+    static void Init(MqttConfig config) {
+        Init(config.server, config.port, config.username, config.password, config.clientId);
+    }
     static void ConnectToMqtt();
 
     inline static TimerHandle_t mqttReconnectTimer;
